@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#130900">
+<title>💩 Caca Olympics</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#130900;color:#f5e6d0;font-family:'Nunito',sans-serif}
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden;position:relative}
+@keyframes floatUp{from{transform:translateY(0) rotate(0);opacity:.08}to{transform:translateY(-110vh) rotate(360deg);opacity:0}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.26)}70%{transform:scale(.94)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,.25),0 5px 20px rgba(0,0,0,.6)}70%{box-shadow:0 0 0 12px rgba(255,215,0,0),0 5px 20px rgba(0,0,0,.6)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes burstAnim{0%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy)))}}
+.particle{position:absolute;bottom:-2rem;pointer-events:none;animation:floatUp linear infinite;opacity:.08}
+.poop-ring{border-radius:50%;display:flex;align-items:center;justify-content:center;user-select:none;transition:transform .13s,filter .2s;cursor:pointer}
+.poop-ring:active{transform:scale(.88)!important}
+.poop-ring.can{animation:pulse 2.4s infinite}
+.poop-ring.shakeing{animation:shake .45s ease!important}
+.poop-ring.popping{animation:pop .4s ease!important}
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-thumb{background:#8B4513;border-radius:2px}
+input{outline:none}input:focus{border-color:#8B4513!important}
+.hidden{display:none!important}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:#1a0e00;border-radius:1.2rem;padding:1.3rem;width:100%;max-width:340px;border:2px solid #8B4513;max-height:86vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:.65rem;right:.75rem;background:none;border:none;color:#6a5040;font-size:1.1rem;cursor:pointer;line-height:1}
+#bottom-nav{flex-shrink:0;display:flex;gap:.3rem;padding:.5rem .8rem .6rem;background:#0e0800;border-top:1px solid #2a1800;z-index:10}
+.nav-btn{flex:1;padding:.5rem .2rem;border-radius:1.4rem;border:none;cursor:pointer;background:transparent;color:#9a7860;font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:.12rem;line-height:1.15;transition:all .18s}
+.nav-btn.active{background:#8B4513;color:#FFD700;box-shadow:0 2px 8px rgba(139,69,19,.45)}
+.nav-btn .ico{font-size:1.15rem}
+.tab-content{flex:1;overflow:hidden;position:relative;z-index:5;min-height:0}
+.tab-panel{height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 1rem .5rem;gap:.65rem}
+.sec-lbl{font-family:'Press Start 2P',monospace;font-size:.46rem;color:#a06030;margin-bottom:.4rem;letter-spacing:.07em;flex-shrink:0}
+.card{background:#1e1200;border-radius:1rem;border:1px solid #3a2000}
+.league-pill{flex-shrink:0;padding:.32rem .9rem;border-radius:2rem;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;background:#1e1000;color:#9a7860;transition:all .18s}
+.league-pill.active{background:#8B4513;color:#FFD700}
+.league-pill.dashed{border:1px dashed #4a2800;background:transparent;color:#7a5840}
+.stat-card{background:#1e1200;border-radius:.9rem;padding:.75rem .3rem;text-align:center;border:1px solid #3a2000}
+.mini-card{background:#1e1200;border-radius:.9rem;padding:.75rem .9rem;border:1px solid #3a2000;display:flex;align-items:center;gap:.6rem;cursor:pointer}
+.rank-item{flex-shrink:0;border-radius:.85rem;padding:.55rem .85rem;display:flex;align-items:center;gap:.6rem;background:#1a0e00;border:1px solid #2e1800}
+.rank-item.me{background:#2e1a00;border-color:#8B4513}
+.trophy-card{background:#130800;border:1.5px solid #221000;border-radius:.9rem;padding:.7rem .5rem;text-align:center;filter:grayscale(1) opacity(.28)}
+.trophy-card.earned{background:linear-gradient(135deg,#2e1c00,#442800);border-color:#8B4513;filter:none}
+.heat-cell{aspect-ratio:1;border-radius:.32rem;background:#1a0e00;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;color:transparent}
+.compare-bar-bg{height:7px;background:#1a0e00;border-radius:4px;overflow:hidden}
+.compare-bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.bar-seg{flex:1;height:9px;border-radius:5px;background:#2e1800;transition:all .3s}
+.bar-seg.filled{background:#8B4513;box-shadow:0 0 7px rgba(139,69,19,.45)}
+.bar-seg.full{background:#FFD700}
+#toast{position:fixed;bottom:4.5rem;left:50%;transform:translateX(-50%);background:#2e1400;color:#FFD700;padding:.45rem 1rem;border-radius:2rem;font-size:.78rem;font-weight:700;z-index:500;border:1px solid #8B4513;white-space:nowrap;box-shadow:0 3px 14px rgba(0,0,0,.6);animation:toastIn .3s ease}
+.burst-p{position:absolute;left:50%;top:50%;font-size:1.2rem;pointer-events:none;animation:burstAnim .85s ease-out forwards}
+#onboarding{position:fixed;inset:0;background:#130900;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden"></div>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div style="text-align:center;padding:.5rem 1rem .15rem;position:relative;width:100%;max-width:320px">
+    <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none"></div>
+    <div style="position:relative;z-index:2">
+      <div style="display:flex;justify-content:center;gap:.3rem;margin-bottom:.1rem;font-size:.75rem;color:#FF6B00;text-shadow:0 0 7px #FF6B00">★ 💩 ★</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:clamp(.65rem,2.9vw,.95rem);color:#FFD700;letter-spacing:.04em;white-space:nowrap;text-shadow:3px 3px 0 #8B0000,5px 5px 0 #4a0000,0 0 18px rgba(255,200,0,.45)">💩 CACA OLYMPICS 💩</div>
+      <div id="ob-subtitle" style="font-family:'Press Start 2P',monospace;font-size:.36rem;color:#FF6B00;letter-spacing:.1em;margin-top:.2rem;text-shadow:0 0 5px #FF6B00">— COMPETENCIA INTESTINAL OFICIAL —</div>
+    </div>
+  </div>
+  <div style="margin-top:1rem;background:#1e1200;border-radius:1.2rem;padding:1.3rem;border:2px solid #8B4513;width:100%;max-width:320px">
+    <p id="ob-title" style="font-family:'Press Start 2P',monospace;font-size:.48rem;color:#FFD700;margin-bottom:.85rem;line-height:1.9;text-align:center">NUEVO COMPETIDOR</p>
+    <div id="ob-langs" style="display:flex;gap:.28rem;justify-content:center;margin-bottom:.85rem;flex-wrap:wrap"></div>
+    <input id="ob-name" type="text" placeholder="Tu nombre..." style="width:100%;padding:.6rem .8rem;border-radius:.75rem;border:1px solid #3a2400;background:#0e0800;color:#f5e6d0;font-family:'Nunito',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.8rem">
+    <p id="ob-avatar-hint" style="font-size:.7rem;color:#8a6040;margin:0 0 .4rem">Elige tu avatar:</p>
+    <div id="ob-emojis" style="display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;margin-bottom:.85rem"></div>
+    <button id="ob-enter" style="width:100%;padding:.7rem;border-radius:.85rem;border:none;background:#2a1400;color:#4a3020;font-family:'Press Start 2P',monospace;font-size:.52rem;cursor:not-allowed;letter-spacing:.04em">ENTRAR AL TRONO 💩</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="hidden" style="display:flex;flex-direction:column;height:100dvh;overflow:hidden">
+
+  <!-- HEADER -->
+  <div style="flex-shrink:0;position:relative;z-index:10">
+    <div style="text-align:center;padding:.5rem 1rem .1rem;position:relative">
+      <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:1"></div>
+      <div style="position:relative;z-index:2">
+        <div style="display:flex;justify-content:center;gap:.3rem;margin-bottom:.1rem;font-size:.75rem;color:#FF6B00;text-shadow:0 0 7px #FF6B00">★ 💩 ★</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:clamp(.65rem,2.9vw,.95rem);color:#FFD700;letter-spacing:.04em;white-space:nowrap;text-shadow:3px 3px 0 #8B0000,5px 5px 0 #4a0000,0 0 18px rgba(255,200,0,.45)">💩 CACA OLYMPICS 💩</div>
+        <div id="main-subtitle" style="font-family:'Press Start 2P',monospace;font-size:.36rem;color:#FF6B00;letter-spacing:.1em;margin-top:.2rem;text-shadow:0 0 5px #FF6B00">— COMPETENCIA INTESTINAL OFICIAL —</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:.5rem;padding-bottom:.4rem">
+      <div style="display:inline-flex;align-items:center;gap:.4rem;background:#1e1200;border-radius:2rem;padding:.3rem 1rem;border:1px solid #3a2400">
+        <span id="me-emoji" style="font-size:1.15rem">🧑</span>
+        <span id="me-name" style="font-size:.88rem;font-weight:700;color:#e8c070">—</span>
+        <span style="font-size:.7rem;color:#7a6040">·</span>
+        <span id="me-score" style="font-size:.8rem;color:#c06030;font-weight:700">0💩</span>
+      </div>
+      <button onclick="openModal('settings')" style="background:#1e1200;border:1px solid #3a2400;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">⚙️</button>
+    </div>
+  </div>
+
+  <!-- LEAGUE BAR -->
+  <div id="league-bar" style="flex-shrink:0;display:flex;gap:.4rem;overflow-x:auto;padding:.15rem 1rem .45rem;scrollbar-width:none;z-index:10"></div>
+
+  <!-- CONTENT -->
+  <div class="tab-content">
+
+    <!-- HOME -->
+    <div id="panel-home" class="tab-panel">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.4rem;flex-shrink:0;padding-top:.35rem">
+        <div id="poop-ring-wrap" style="position:relative">
+          <div id="poop-ring" class="poop-ring can" onclick="doPoop()" style="width:136px;height:136px;background:radial-gradient(circle at 38% 32%,#5a3800 0%,#2e1800 60%,#160c00 100%);border:3px solid #FFD700;box-shadow:0 0 0 4px rgba(255,215,0,.08),0 6px 24px rgba(0,0,0,.7)">
+            <span id="poop-emoji" style="font-size:4.4rem;filter:drop-shadow(0 2px 8px rgba(255,200,0,.55));pointer-events:none">💩</span>
+          </div>
+        </div>
+        <p id="poop-hint" style="font-size:.84rem;color:#9a7860;text-align:center;margin:0">Toca para registrar tu visita al trono</p>
+      </div>
+      <div class="card" style="padding:.75rem 1rem;flex-shrink:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem">
+          <span id="daily-label" style="font-weight:700;font-size:.9rem;color:#d0a050">Hoy</span>
+          <span id="daily-count" style="font-weight:900;font-size:1rem;color:#f0e0c0">0/3</span>
+        </div>
+        <div style="display:flex;gap:.4rem" id="bar-segs">
+          <div class="bar-seg"></div><div class="bar-seg"></div><div class="bar-seg"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;flex-shrink:0">
+        <div class="stat-card"><div style="font-size:1.1rem">📅</div><div id="s-week" style="font-weight:900;font-size:1.3rem;color:#FFD700;line-height:1">0</div><div id="sl-week" style="font-size:.72rem;color:#9a7860;margin-top:.12rem">Semana</div></div>
+        <div class="stat-card"><div style="font-size:1.1rem">🗓</div><div id="s-month" style="font-weight:900;font-size:1.3rem;color:#FFD700;line-height:1">0</div><div id="sl-month" style="font-size:.72rem;color:#9a7860;margin-top:.12rem">Mes</div></div>
+        <div class="stat-card"><div style="font-size:1.1rem">💎</div><div id="s-total" style="font-weight:900;font-size:1.3rem;color:#FFD700;line-height:1">0</div><div id="sl-total" style="font-size:.72rem;color:#9a7860;margin-top:.12rem">Total</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;flex-shrink:0">
+        <div class="mini-card" style="cursor:default"><span id="streak-icon" style="font-size:1.6rem">💧</span><div><div id="streak-val" style="font-weight:900;font-size:1.15rem;color:#f0e0c0;line-height:1">0</div><div id="streak-lbl" style="font-size:.7rem;color:#9a7860">días racha</div></div></div>
+        <div class="mini-card" onclick="openModal('trophies-all')"><span style="font-size:1.6rem">🎖</span><div style="text-align:left"><div id="trophy-count" style="font-weight:900;font-size:1.15rem;color:#FFD700;line-height:1">0/14</div><div id="trophy-lbl" style="font-size:.7rem;color:#9a7860">logros →</div></div></div>
+      </div>
+    </div>
+
+    <!-- RANKING -->
+    <div id="panel-ranking" class="tab-panel hidden">
+      <div id="private-notice" style="flex-shrink:0;background:#1a0e00;border:1px dashed #4a2800;border-radius:.9rem;padding:.65rem .9rem;display:flex;align-items:center;gap:.55rem">
+        <span style="font-size:1.2rem">🔒</span>
+        <div><div id="private-badge" style="font-size:.82rem;font-weight:700;color:#d0a050">Competición privada</div><div id="private-hint" style="font-size:.7rem;color:#8a6840;margin-top:.1rem">Selecciona una liga para ver rivales</div></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:.5rem;min-height:0;overflow:hidden">
+        <div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="sec-lbl" id="rl-weekly">🏆 SEMANAL</div><div id="rank-weekly" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem"></div></div>
+        <div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="sec-lbl" id="rl-monthly">📅 MENSUAL</div><div id="rank-monthly" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem"></div></div>
+        <div style="flex:1;display:flex;flex-direction:column;min-height:0"><div class="sec-lbl" id="rl-historic">💎 HISTÓRICO</div><div id="rank-historic" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem"></div></div>
+      </div>
+    </div>
+
+    <!-- TROPHIES -->
+    <div id="panel-trophies" class="tab-panel hidden" style="padding:0 1rem .5rem">
+      <div id="trophy-grid" style="height:100%;display:grid;grid-template-columns:1fr 1fr;gap:.5rem;overflow-y:auto;align-content:start"></div>
+    </div>
+
+    <!-- STATS -->
+    <div id="panel-stats" class="tab-panel hidden">
+      <div style="flex-shrink:0">
+        <div class="sec-lbl" id="sl-last14">ÚLTIMOS 14 DÍAS</div>
+        <div id="heatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;margin-bottom:.35rem"></div>
+        <div style="display:flex;gap:.3rem;font-size:.65rem;color:#8a6840;align-items:center">
+          <span id="sl-less">Menos</span>
+          <div style="width:12px;height:12px;border-radius:2px;background:#1a0e00"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:#5a3300"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:#8B4513"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:#FFD700"></div>
+          <span id="sl-more">Más</span>
+        </div>
+      </div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+        <div class="sec-lbl" id="sl-compare">COMPARATIVA</div>
+        <div id="compare-hint" style="font-size:.75rem;color:#8a6840;margin-bottom:.3rem;flex-shrink:0">Únete a una liga para compararte</div>
+        <div id="compare-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV — única barra de navegación -->
+  <div id="bottom-nav">
+    <button class="nav-btn active" data-tab="home" onclick="switchTab('home')"><span class="ico">🏠</span><span id="nl-home">Inicio</span></button>
+    <button class="nav-btn" data-tab="ranking" onclick="switchTab('ranking')"><span class="ico">🏆</span><span id="nl-ranking">Ranking</span></button>
+    <button class="nav-btn" data-tab="trophies" onclick="switchTab('trophies')"><span class="ico">🎖</span><span id="nl-trophies">Logros</span></button>
+    <button class="nav-btn" data-tab="stats" onclick="switchTab('stats')"><span class="ico">📊</span><span id="nl-stats">Stats</span></button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="hidden"></div>
+
+<!-- MODAL TROPHIES ALL -->
+<div id="modal-trophies-all" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('trophies-all')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('trophies-all')">✕</button>
+    <p id="mt-title" style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:#FFD700;margin:0 0 .85rem">LOGROS</p>
+    <div id="mt-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.45rem"></div>
+  </div>
+</div>
+
+<!-- MODAL SETTINGS -->
+<div id="modal-settings" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('settings')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('settings')">✕</button>
+    <p id="ms-title" style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:#FFD700;margin:0 0 .9rem">AJUSTES</p>
+    <p id="ms-profile" style="font-size:.7rem;font-weight:700;color:#c49050;margin:0 0 .5rem">Perfil</p>
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem">
+      <div id="ms-emoji-preview" style="font-size:2.2rem;background:#0e0800;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border:2px solid #3a2000;flex-shrink:0">🧑</div>
+      <input id="ms-name" style="flex:1;padding:.48rem .68rem;border-radius:.65rem;border:1px solid #3a2000;background:#0e0800;color:#f5e6d0;font-family:'Nunito',sans-serif;font-weight:700;font-size:.88rem">
+    </div>
+    <div id="ms-emojis" style="display:flex;flex-wrap:wrap;gap:.28rem;margin-bottom:.9rem"></div>
+    <p id="ms-lang-lbl" style="font-size:.7rem;font-weight:700;color:#c49050;margin:0 0 .45rem">Idioma</p>
+    <div id="ms-langs" style="display:flex;flex-direction:column;gap:.28rem;margin-bottom:.9rem"></div>
+    <button id="ms-save" onclick="saveSettings()" style="width:100%;padding:.58rem;border-radius:.75rem;border:none;background:#8B4513;color:#FFD700;font-family:'Nunito',sans-serif;font-weight:900;font-size:.84rem;cursor:pointer">Guardar cambios</button>
+  </div>
+</div>
+
+<!-- MODAL LEAGUES -->
+<div id="modal-leagues" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('leagues')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('leagues')">✕</button>
+    <p id="ml-title" style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:#FFD700;margin:0 0 .8rem">LIGAS PRIVADAS</p>
+    <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
+      <button id="ml-create" onclick="openModal('create-league')" style="flex:1;padding:.45rem;border-radius:.7rem;border:none;background:#8B4513;color:#FFD700;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem">+ Crear</button>
+      <button id="ml-join" onclick="openModal('join-league')" style="flex:1;padding:.45rem;border-radius:.7rem;border:1px solid #8B4513;background:transparent;color:#c49050;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem">Unirse con código</button>
+    </div>
+    <div id="ml-list"></div>
+  </div>
+</div>
+
+<!-- MODAL LEAGUE DETAIL -->
+<div id="modal-league-detail" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('league-detail')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('league-detail')">✕</button>
+    <p style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#FFD700;margin:0 0 .2rem">LIGA</p>
+    <p id="mld-name" style="font-weight:900;font-size:.98rem;color:#f5e6d0;margin:0 0 .35rem"></p>
+    <div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.8rem">
+      <span id="mld-code-lbl" style="font-size:.62rem;color:#6a4020">Código:</span>
+      <span id="mld-code" style="font-size:.78rem;color:#FFD700;font-family:monospace;font-weight:700;letter-spacing:.1em;background:#0e0800;padding:.07rem .4rem;border-radius:.32rem"></span>
+      <span id="mld-share" style="font-size:.6rem;color:#4a3020">· Compártelo</span>
+    </div>
+    <div id="mld-members" style="margin-bottom:.8rem"></div>
+    <button id="mld-leave" onclick="leaveCurrentLeague()" style="width:100%;padding:.5rem;border-radius:.75rem;border:1px solid #5a1010;background:#280a0a;color:#ff6a6a;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem">Salir de esta liga 👋</button>
+  </div>
+</div>
+
+<!-- MODAL CREATE LEAGUE -->
+<div id="modal-create-league" class="modal-overlay hidden" onclick="if(event.target===this)openModal('leagues')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="openModal('leagues')">✕</button>
+    <p id="mcl-title" style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:#FFD700;margin:0 0 .8rem">NUEVA LIGA</p>
+    <input id="mcl-name" placeholder="Nombre de la liga..." onkeydown="if(event.key==='Enter')createLeague()" style="width:100%;padding:.55rem .75rem;border-radius:.7rem;border:1px solid #3a2000;background:#0e0800;color:#f5e6d0;font-family:'Nunito',sans-serif;font-weight:700;font-size:.88rem;margin-bottom:.55rem">
+    <p id="mcl-hint" style="font-size:.65rem;color:#7a5040;margin:0 0 .8rem;line-height:1.5">Se generará un código de 6 caracteres.</p>
+    <div style="display:flex;gap:.4rem">
+      <button id="mcl-back" onclick="openModal('leagues')" style="flex:1;padding:.5rem;border-radius:.7rem;border:1px solid #2e1800;background:transparent;color:#6a5030;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700">Atrás</button>
+      <button id="mcl-create" onclick="createLeague()" style="flex:1;padding:.5rem;border-radius:.7rem;border:none;background:#8B4513;color:#FFD700;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:900">Crear 🏆</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL JOIN LEAGUE -->
+<div id="modal-join-league" class="modal-overlay hidden" onclick="if(event.target===this)openModal('leagues')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="openModal('leagues')">✕</button>
+    <p id="mjl-title" style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:#FFD700;margin:0 0 .8rem">UNIRSE CON CÓDIGO</p>
+    <input id="mjl-code" placeholder="AB3XY7" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')joinLeague()" style="width:100%;padding:.65rem .75rem;border-radius:.7rem;border:1px solid #3a2000;background:#0e0800;color:#FFD700;font-family:monospace;font-size:1.4rem;letter-spacing:.22em;text-align:center;margin-bottom:.8rem">
+    <div style="display:flex;gap:.4rem">
+      <button id="mjl-back" onclick="openModal('leagues')" style="flex:1;padding:.5rem;border-radius:.7rem;border:1px solid #2e1800;background:transparent;color:#6a5030;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700">Atrás</button>
+      <button id="mjl-join" onclick="joinLeague()" style="flex:1;padding:.5rem;border-radius:.7rem;border:none;background:#8B4513;color:#FFD700;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:900">Unirse 💩</button>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+const SK="caca-v4";
+["caca-v3","caca-olympics-v1","caca-olympics-v2"].forEach(k=>{try{localStorage.removeItem(k);}catch{}});
+const TROPHY_BASE=[
+  {id:"first",icon:"🥇",cond:s=>s>=1},{id:"triple",icon:"🔥",cond:(s,d)=>d>=3},
+  {id:"str3",icon:"⚡",cond:(s,d,st)=>st>=3},{id:"str7",icon:"🌟",cond:(s,d,st)=>st>=7},
+  {id:"str14",icon:"🚀",cond:(s,d,st)=>st>=14},{id:"str30",icon:"👑",cond:(s,d,st)=>st>=30},
+  {id:"s10",icon:"💩",cond:s=>s>=10},{id:"s25",icon:"🎯",cond:s=>s>=25},
+  {id:"s50",icon:"🏅",cond:s=>s>=50},{id:"s100",icon:"💎",cond:s=>s>=100},
+  {id:"s200",icon:"🌌",cond:s=>s>=200},{id:"s500",icon:"🐉",cond:s=>s>=500},
+  {id:"reg",icon:"🧘",cond:s=>s>=20},{id:"week5",icon:"📅",cond:(s,d,st,ws)=>ws>=5},
+];
+const TL={es:["Primera Cagada","Triple Amenaza","Racha de 3","Semana de Fuego","Quince Días","Rey del Trono","Decena","Cuarto de Siglo","Cincuentón","Centenario","Ser Supremo","Leyenda Intestinal","El Regularísimo","Semana Activa"],en:["First Drop","Triple Threat","3-Day Streak","Week of Fire","Fortnight","Throne King","Ten-der","Quarter Century","Half-Centurion","Centurion","Supreme Being","Intestinal Legend","Mr. Regular","Active Week"],pt:["Primeira Cagada","Tripla Ameaça","Sequência de 3","Semana de Fogo","Quinze Dias","Rei do Trono","Dezena","Quarto de Século","Cinquentão","Centenário","Ser Supremo","Lenda Intestinal","O Regularíssimo","Semana Ativa"],de:["Erster Stuhldrang","Dreifachbedrohung","3er-Serie","Feuerwoche","Zwei Wochen","Thronkönig","Zehnter","Vierteljahrhundert","Fünfziger","Zenturio","Übermensch","Darmlegende","Der Regelmäßige","Aktive Woche"],it:["Prima Cacata","Tripla Minaccia","Serie di 3","Settimana di Fuoco","Quindici Giorni","Re del Trono","Decina","Quarto di Secolo","Cinquantino","Centenario","Essere Supremo","Leggenda Intestinale","Il Regolarissimo","Settimana Attiva"]};
+const TD={es:["Registra tu primera visita","3 puntos en un día","3 días consecutivos","7 días seguidos","14 días seguidos","30 días seguidos","10 cagas totales","25 cagas totales","50 cagas totales","100 cagas totales","200 cagas totales","500 cagas totales","20 cagas totales","5 cagas en una semana"],en:["Log your first visit","3 points in one day","3 consecutive days","7 days in a row","14 days in a row","30 days in a row","10 total drops","25 total drops","50 total drops","100 total drops","200 total drops","500 total drops","20 total drops","5 drops in one week"],pt:["Registre sua primeira visita","3 pontos em um dia","3 dias consecutivos","7 dias seguidos","14 dias seguidos","30 dias seguidos","10 cagadas totais","25 cagadas totais","50 cagadas totais","100 cagadas totais","200 cagadas totais","500 cagadas totais","20 cagadas totais","5 cagadas em uma semana"],de:["Ersten Besuch erfassen","3 Punkte an einem Tag","3 aufeinanderfolgende Tage","7 Tage in Folge","14 Tage in Folge","30 Tage in Folge","10 Besuche gesamt","25 Besuche gesamt","50 Besuche gesamt","100 Besuche gesamt","200 Besuche gesamt","500 Besuche gesamt","20 Besuche gesamt","5 Besuche in einer Woche"],it:["Registra la prima visita","3 punti in un giorno","3 giorni consecutivi","7 giorni di fila","14 giorni di fila","30 giorni di fila","10 cacate totali","25 cacate totali","50 cacate totali","100 cacate totali","200 cacate totali","500 cacate totali","20 cacate totali","5 cacate in una settimana"]};
+const MSGS={es:["¡Eso es dedicación intestinal! 🎉","El trono te llama... ¡y tú respondes! 👑","Misión cumplida. 🫡","El arte de las heces no tiene límites. 🎨","Un punto más para la humanidad 💩","La regularidad es virtud. 🧘"],en:["Intestinal dedication! 🎉","The throne calls... and you answer! 👑","Mission accomplished. 🫡","The art of feces knows no limits. 🎨","One more point for humanity 💩","Regularity is virtue. 🧘"],pt:["Dedicação intestinal! 🎉","O trono chama... e você responde! 👑","Missão cumprida. 🫡","A arte das fezes não tem limites. 🎨","Mais um ponto para a humanidade 💩","A regularidade é virtude. 🧘"],de:["Darmengagement! 🎉","Der Thron ruft... und du antwortest! 👑","Mission erfüllt. 🫡","Die Kunst des Stuhls kennt keine Grenzen. 🎨","Noch ein Punkt für die Menschheit 💩","Regelmäßigkeit ist Tugend. 🧘"],it:["Dedizione intestinale! 🎉","Il trono chiama... e tu rispondi! 👑","Missione compiuta. 🫡","L'arte delle feci non ha limiti. 🎨","Un altro punto per l'umanità 💩","La regolarità è virtù. 🧘"]};
+const T={es:{sub:"— COMPETENCIA INTESTINAL OFICIAL —",np:"NUEVO COMPETIDOR",nh:"Tu nombre...",ah:"Elige tu avatar:",eb:"ENTRAR AL TRONO 💩",home:"Inicio",rank:"Ranking",tro:"Logros",st:"Stats",today:"Hoy",week:"Semana",month:"Mes",total:"Total",strl:"días racha",trol:"logros",tap:"Toca para registrar tu visita al trono",lim:"Límite diario · ¡Descansa!",limt:"¡Límite diario! 3/3 💩",solo:"👤 Solo yo",lbtn:"🎯 Ligas",pb:"Competición privada",ph:"Selecciona una liga para ver rivales",wk:"Semanal",mo:"Mensual",hi:"Histórico",l14:"ÚLTIMOS 14 DÍAS",cmp:"COMPARATIVA",jl:"Únete a una liga para compararte",less:"Menos",more:"Más",lt:"LIGAS PRIVADAS",cr:"+ Crear",jc:"Unirse con código",nl:"No hay ligas todavía.",lm:"miembro(s)",cl:"Código:",sc:"· Compártelo",ll:"Salir de esta liga 👋",back:"Atrás",crt:"Crear 🏆",jb:"Unirse 💩",newl:"NUEVA LIGA",ln:"Nombre de la liga...",lch:"Se generará un código de 6 caracteres. Compártelo con tus amigos.",jt:"UNIRSE CON CÓDIGO",vb:"Ver",jd:"Unirse",stit:"AJUSTES",pr:"Perfil",lang:"Idioma",sav:"Guardar cambios",saved:"¡Guardado! ✅",atit:"LOGROS"},
+en:{sub:"— OFFICIAL INTESTINAL COMPETITION —",np:"NEW COMPETITOR",nh:"Your name...",ah:"Choose your avatar:",eb:"ENTER THE THRONE 💩",home:"Home",rank:"Ranking",tro:"Trophies",st:"Stats",today:"Today",week:"Week",month:"Month",total:"Total",strl:"day streak",trol:"trophies",tap:"Tap to log your throne visit",lim:"Daily limit reached · Rest!",limt:"Daily limit! 3/3 💩",solo:"👤 Just me",lbtn:"🎯 Leagues",pb:"Private competition",ph:"Select a league to see rivals",wk:"Weekly",mo:"Monthly",hi:"All-time",l14:"LAST 14 DAYS",cmp:"COMPARISON",jl:"Join a league to compare",less:"Less",more:"More",lt:"PRIVATE LEAGUES",cr:"+ Create",jc:"Join with code",nl:"No leagues yet.",lm:"member(s)",cl:"Code:",sc:"· Share it",ll:"Leave this league 👋",back:"Back",crt:"Create 🏆",jb:"Join 💩",newl:"NEW LEAGUE",ln:"League name...",lch:"A 6-character code will be generated. Share it.",jt:"JOIN WITH CODE",vb:"View",jd:"Join",stit:"SETTINGS",pr:"Profile",lang:"Language",sav:"Save changes",saved:"Saved! ✅",atit:"ACHIEVEMENTS"},
+pt:{sub:"— COMPETIÇÃO INTESTINAL OFICIAL —",np:"NOVO COMPETIDOR",nh:"Seu nome...",ah:"Escolha seu avatar:",eb:"ENTRAR NO TRONO 💩",home:"Início",rank:"Ranking",tro:"Troféus",st:"Stats",today:"Hoje",week:"Semana",month:"Mês",total:"Total",strl:"dias seguidos",trol:"troféus",tap:"Toca para registrar sua visita ao trono",lim:"Limite diário · Descanse!",limt:"Limite diário! 3/3 💩",solo:"👤 Só eu",lbtn:"🎯 Ligas",pb:"Competição privada",ph:"Selecione uma liga para ver rivais",wk:"Semanal",mo:"Mensal",hi:"Histórico",l14:"ÚLTIMOS 14 DIAS",cmp:"COMPARATIVO",jl:"Entre em uma liga para comparar",less:"Menos",more:"Mais",lt:"LIGAS PRIVADAS",cr:"+ Criar",jc:"Entrar com código",nl:"Sem ligas ainda.",lm:"membro(s)",cl:"Código:",sc:"· Compartilhe",ll:"Sair desta liga 👋",back:"Voltar",crt:"Criar 🏆",jb:"Entrar 💩",newl:"NOVA LIGA",ln:"Nome da liga...",lch:"Um código de 6 caracteres será gerado.",jt:"ENTRAR COM CÓDIGO",vb:"Ver",jd:"Entrar",stit:"CONFIGURAÇÕES",pr:"Perfil",lang:"Idioma",sav:"Salvar alterações",saved:"Salvo! ✅",atit:"CONQUISTAS"},
+de:{sub:"— OFFIZIELLER DARMWETTBEWERB —",np:"NEUER MITSTREITER",nh:"Dein Name...",ah:"Wähle deinen Avatar:",eb:"AUF DEN THRON 💩",home:"Start",rank:"Rangliste",tro:"Trophäen",st:"Stats",today:"Heute",week:"Woche",month:"Monat",total:"Gesamt",strl:"Tage Serie",trol:"Trophäen",tap:"Tippe um deinen Thronbesuch zu erfassen",lim:"Tageslimit erreicht!",limt:"Tageslimit! 3/3 💩",solo:"👤 Nur ich",lbtn:"🎯 Ligen",pb:"Privater Wettbewerb",ph:"Liga auswählen um Rivalen zu sehen",wk:"Wöchentlich",mo:"Monatlich",hi:"Gesamt",l14:"LETZTE 14 TAGE",cmp:"VERGLEICH",jl:"Liga beitreten zum Vergleichen",less:"Weniger",more:"Mehr",lt:"PRIVATE LIGEN",cr:"+ Erstellen",jc:"Mit Code beitreten",nl:"Noch keine Ligen.",lm:"Mitglied(er)",cl:"Code:",sc:"· Teilen",ll:"Liga verlassen 👋",back:"Zurück",crt:"Erstellen 🏆",jb:"Beitreten 💩",newl:"NEUE LIGA",ln:"LigaName...",lch:"Ein 6-stelliger Code wird erstellt.",jt:"MIT CODE BEITRETEN",vb:"Ansehen",jd:"Beitreten",stit:"EINSTELLUNGEN",pr:"Profil",lang:"Sprache",sav:"Speichern",saved:"Gespeichert! ✅",atit:"ERRUNGENSCHAFTEN"},
+it:{sub:"— COMPETIZIONE INTESTINALE UFFICIALE —",np:"NUOVO CONCORRENTE",nh:"Il tuo nome...",ah:"Scegli il tuo avatar:",eb:"SUL TRONO 💩",home:"Home",rank:"Classifica",tro:"Trofei",st:"Stats",today:"Oggi",week:"Settimana",month:"Mese",total:"Totale",strl:"giorni fila",trol:"trofei",tap:"Tocca per registrare la tua visita al trono",lim:"Limite giornaliero · Riposati!",limt:"Limite! 3/3 💩",solo:"👤 Solo io",lbtn:"🎯 Leghe",pb:"Competizione privata",ph:"Seleziona una lega per vedere i rivali",wk:"Settimanale",mo:"Mensile",hi:"Storico",l14:"ULTIMI 14 GIORNI",cmp:"CONFRONTO",jl:"Unisciti a una lega per confrontarti",less:"Meno",more:"Di più",lt:"LEGHE PRIVATE",cr:"+ Crea",jc:"Unisciti con codice",nl:"Nessuna lega ancora.",lm:"membro/i",cl:"Codice:",sc:"· Condividilo",ll:"Lascia questa lega 👋",back:"Indietro",crt:"Crea 🏆",jb:"Unisciti 💩",newl:"NUOVA LEGA",ln:"Nome della lega...",lch:"Verrà generato un codice di 6 caratteri.",jt:"UNISCITI CON CODICE",vb:"Vedi",jd:"Unisciti",stit:"IMPOSTAZIONI",pr:"Profilo",lang:"Lingua",sav:"Salva modifiche",saved:"Salvato! ✅",atit:"TRAGUARDI"}};
+const LN={es:"🇪🇸 Español",en:"🇬🇧 English",pt:"🇧🇷 Português",de:"🇩🇪 Deutsch",it:"🇮🇹 Italiano"};
+const EM=["🧑","👩","👨","🧔","👧","🧒","🤠","🧑‍💻","🧑‍🍳","🤡","👻","🤖","🐸","🦊","🐼","🐨","🦁","🐯","🐻","🦄"];
+
+// ── STATE ─────────────────────────────────────────────────────────
+let S={me:null,lang:"es",logs:[],leagues:[]};
+let activeLeague=null,currentTab="home",settingEmoji="🧑",settingLang="es",focusLid=null,toastTimer=null,obLang="es",obEmoji="🧑";
+
+function load(){try{const r=localStorage.getItem(SK);if(r)S={...S,...JSON.parse(r)};}catch{}}
+function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch{}}
+const t=()=>T[S.lang]||T.es;
+const todayS=()=>new Date().toISOString().slice(0,10);
+const wkStart=()=>{const d=new Date(),day=d.getDay();return new Date(d.setDate(d.getDate()-day+(day===0?-6:1))).toISOString().slice(0,10);};
+const moStart=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;};
+const score=(pid,from=null)=>S.logs.filter(l=>l.playerId===pid&&(!from||l.date>=from)).reduce((s,l)=>s+l.count,0);
+const cToday=(pid)=>S.logs.filter(l=>l.playerId===pid&&l.date===todayS()).reduce((s,l)=>s+l.count,0);
+function streak(pid){const days=[...new Set(S.logs.filter(l=>l.playerId===pid).map(l=>l.date))].sort().reverse();if(!days.length)return 0;let s=0,c=new Date();for(let i=0;i<365;i++){const d=c.toISOString().slice(0,10);if(days.includes(d)){s++;c.setDate(c.getDate()-1);}else if(i===0)c.setDate(c.getDate()-1);else break;}return s;}
+const mkCode=()=>Math.random().toString(36).slice(2,8).toUpperCase();
+
+// ── PARTICLES ─────────────────────────────────────────────────────
+function initParticles(){const w=document.getElementById("particles");["💩","🧻","✨","💫","⭐"].forEach((e,gi)=>{for(let i=0;i<2;i++){const idx=gi*2+i,d=document.createElement("div");d.className="particle";d.textContent=e;d.style.cssText=`left:${(idx*9.5)%100}%;font-size:${idx%3===0?"1.2rem":".85rem"};animation-duration:${6+idx%4}s;animation-delay:${(idx*.8)%6}s`;w.appendChild(d);}});}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg){const el=document.getElementById("toast");el.textContent=String(msg);el.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add("hidden"),2600);}
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function openModal(id){document.querySelectorAll(".modal-overlay").forEach(m=>m.classList.add("hidden"));if(id==="leagues")renderLeaguesList();if(id==="settings")renderSettings();if(id==="trophies-all")renderTrophiesModal();const m=document.getElementById("modal-"+id);if(m)m.classList.remove("hidden");}
+function closeModal(id){const m=document.getElementById("modal-"+id);if(m)m.classList.add("hidden");}
+
+// ── ONBOARDING ────────────────────────────────────────────────────
+function initOnboarding(){
+  const lw=document.getElementById("ob-langs");lw.innerHTML="";
+  Object.entries(LN).forEach(([k,v])=>{const b=document.createElement("button");b.type="button";b.textContent=v;b.style.cssText="padding:.25rem .5rem;border-radius:.55rem;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:.68rem;cursor:pointer;background:#2a1400;color:#7a5030";b.onclick=()=>{obLang=k;renderObLangs();};lw.appendChild(b);});
+  const ew=document.getElementById("ob-emojis");ew.innerHTML="";
+  EM.forEach(e=>{const b=document.createElement("button");b.type="button";b.textContent=e;b.style.cssText="font-size:1.35rem;border-radius:.5rem;padding:.15rem .2rem;cursor:pointer;background:#2a1400;border:2px solid transparent";b.onclick=()=>{obEmoji=e;renderObEmojis();};ew.appendChild(b);});
+  renderObLangs();renderObEmojis();
+  document.getElementById("ob-name").oninput=updEnter;
+  document.getElementById("ob-name").onkeydown=e=>{if(e.key==="Enter")doEnter();};
+  document.getElementById("ob-enter").onclick=doEnter;
+}
+function renderObLangs(){
+  const tt=T[obLang]||T.es;
+  document.getElementById("ob-subtitle").textContent=tt.sub;
+  document.getElementById("ob-title").textContent=tt.np;
+  document.getElementById("ob-name").placeholder=tt.nh;
+  document.getElementById("ob-avatar-hint").textContent=tt.ah;
+  document.getElementById("ob-enter").textContent=tt.eb;
+  document.querySelectorAll("#ob-langs button").forEach((b,i)=>{const k=Object.keys(LN)[i];b.style.background=obLang===k?"#8B4513":"#2a1400";b.style.color=obLang===k?"#FFD700":"#7a5030";});
+  updEnter();
+}
+function renderObEmojis(){document.querySelectorAll("#ob-emojis button").forEach((b,i)=>{const e=EM[i];b.style.background=obEmoji===e?"#8B4513":"#2a1400";b.style.border=obEmoji===e?"2px solid #FFD700":"2px solid transparent";});}
+function updEnter(){const n=document.getElementById("ob-name").value.trim();const b=document.getElementById("ob-enter");b.style.background=n?"#8B4513":"#2a1400";b.style.color=n?"#FFD700":"#4a3020";b.style.cursor=n?"pointer":"not-allowed";}
+function doEnter(){const n=document.getElementById("ob-name").value.trim();if(!n)return;S={me:{id:"p_"+Date.now(),name:n,emoji:obEmoji},lang:obLang,logs:[],leagues:[]};save();document.getElementById("onboarding").classList.add("hidden");const ma=document.getElementById("main-app");ma.classList.remove("hidden");ma.style.display="flex";initApp();}
+
+// ── APP ───────────────────────────────────────────────────────────
+function initApp(){applyLang();renderLeagueBar();renderAll();}
+function applyLang(){
+  const tt=t();
+  document.getElementById("main-subtitle").textContent=tt.sub;
+  document.getElementById("nl-home").textContent=tt.home;
+  document.getElementById("nl-ranking").textContent=tt.rank;
+  document.getElementById("nl-trophies").textContent=tt.tro;
+  document.getElementById("nl-stats").textContent=tt.st;
+  document.getElementById("sl-last14").textContent=tt.l14;
+  document.getElementById("sl-less").textContent=tt.less;
+  document.getElementById("sl-more").textContent=tt.more;
+  document.getElementById("private-badge").textContent=tt.pb;
+  document.getElementById("private-hint").textContent=tt.ph;
+  document.getElementById("rl-weekly").textContent="🏆 "+tt.wk.toUpperCase();
+  document.getElementById("rl-monthly").textContent="📅 "+tt.mo.toUpperCase();
+  document.getElementById("rl-historic").textContent="💎 "+tt.hi.toUpperCase();
+  document.getElementById("sl-compare").textContent=tt.cmp+" · "+(activeLeague?S.leagues.find(l=>l.id===activeLeague)?.name:tt.solo);
+  document.getElementById("compare-hint").textContent=tt.jl;
+  document.getElementById("compare-hint").style.display=activeLeague?"none":"block";
+  renderLeagueBar();
+}
+function renderAll(){renderHome();renderRanking();renderTrophies();renderStats();}
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.add("hidden"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("panel-"+tab).classList.remove("hidden");
+  document.querySelector(`.nav-btn[data-tab="${tab}"]`).classList.add("active");
+  if(tab==="ranking")renderRanking();
+  if(tab==="stats")renderStats();
+  if(tab==="trophies")renderTrophies();
+}
+
+// ── LEAGUE BAR ────────────────────────────────────────────────────
+function renderLeagueBar(){
+  const tt=t();const bar=document.getElementById("league-bar");bar.innerHTML="";
+  const myL=S.leagues.filter(l=>l.members.some(m=>m.id===S.me.id));
+  const solo=document.createElement("button");solo.className="league-pill"+(activeLeague===null?" active":"");solo.textContent=tt.solo;solo.onclick=()=>setLeague(null);bar.appendChild(solo);
+  myL.forEach(l=>{const b=document.createElement("button");b.className="league-pill"+(activeLeague===l.id?" active":"");b.textContent="🏆 "+l.name;b.onclick=()=>setLeague(l.id);bar.appendChild(b);});
+  const lb=document.createElement("button");lb.className="league-pill dashed";lb.textContent=tt.lbtn;lb.onclick=()=>openModal("leagues");bar.appendChild(lb);
+}
+function setLeague(id){activeLeague=id;renderLeagueBar();document.getElementById("private-notice").style.display=id?"none":"flex";applyLang();renderRanking();renderStats();}
+
+// ── HOME ──────────────────────────────────────────────────────────
+function renderHome(){
+  if(!S.me)return;
+  const tt=t(),me=S.me,td=cToday(me.id),ts=score(me.id,null),ws=score(me.id,wkStart()),ms=score(me.id,moStart()),str=streak(me.id),ec=TROPHY_BASE.filter((tr,i)=>tr.cond(ts,td,str,ws)).length;
+  document.getElementById("me-emoji").textContent=me.emoji;document.getElementById("me-name").textContent=me.name;document.getElementById("me-score").textContent=ts+"💩";
+  const ring=document.getElementById("poop-ring"),can=td<3;
+  ring.style.background=can?"radial-gradient(circle at 38% 32%,#5a3800 0%,#2e1800 60%,#160c00 100%)":"radial-gradient(circle,#1a1000 60%,#221400 100%)";
+  ring.style.borderColor=can?"#FFD700":"#2e1c00";ring.style.boxShadow=can?"0 0 0 4px rgba(255,215,0,.08),0 6px 24px rgba(0,0,0,.7)":"0 4px 12px rgba(0,0,0,.6)";ring.style.cursor=can?"pointer":"not-allowed";
+  document.getElementById("poop-emoji").style.filter=can?"drop-shadow(0 2px 8px rgba(255,200,0,.55))":"grayscale(.7) opacity(.4)";
+  if(can){ring.classList.add("can");}else{ring.classList.remove("can","shakeing","popping");}
+  document.getElementById("poop-hint").textContent=can?tt.tap:tt.lim;
+  document.getElementById("daily-label").textContent=tt.today;document.getElementById("daily-count").textContent=td+"/3";document.getElementById("daily-count").style.color=td===3?"#FFD700":"#f0e0c0";
+  document.querySelectorAll(".bar-seg").forEach((s,i)=>{s.className="bar-seg";if(i<td)s.classList.add(td===3?"full":"filled");});
+  document.getElementById("s-week").textContent=ws;document.getElementById("s-month").textContent=ms;document.getElementById("s-total").textContent=ts;
+  document.getElementById("sl-week").textContent=tt.week;document.getElementById("sl-month").textContent=tt.month;document.getElementById("sl-total").textContent=tt.total;
+  document.getElementById("streak-val").textContent=str;document.getElementById("streak-val").style.color=str>=3?"#FF8040":"#f0e0c0";
+  document.getElementById("streak-icon").textContent=str>=7?"🔥":str>=3?"⚡":"💧";document.getElementById("streak-lbl").textContent=tt.strl;
+  document.getElementById("trophy-count").textContent=ec+"/"+TROPHY_BASE.length;document.getElementById("trophy-lbl").textContent=tt.trol+" →";
+}
+
+// ── POOP ──────────────────────────────────────────────────────────
+function doPoop(){
+  const me=S.me,td=cToday(me.id),tt=t();
+  if(td>=3){const ring=document.getElementById("poop-ring");ring.classList.remove("shakeing","popping","can");void ring.offsetWidth;ring.classList.add("shakeing");setTimeout(()=>{ring.classList.remove("shakeing");if(cToday(me.id)<3)ring.classList.add("can");},500);toast(tt.limt);return;}
+  S.logs.push({playerId:me.id,date:todayS(),count:1});save();
+  spawnBurst();
+  const ring=document.getElementById("poop-ring");ring.classList.remove("shakeing","popping","can");void ring.offsetWidth;ring.classList.add("popping");setTimeout(()=>{ring.classList.remove("popping");renderHome();},450);
+  const msgs=MSGS[S.lang]||MSGS.es;toast(msgs[Math.floor(Math.random()*msgs.length)]);renderHome();
+}
+function spawnBurst(){const w=document.getElementById("poop-ring-wrap");for(let i=0;i<10;i++){const d=document.createElement("div");d.className="burst-p";const a=(i/10)*360,dist=65+Math.random()*40;d.style.setProperty("--dx",`${Math.cos(a*Math.PI/180)*dist}px`);d.style.setProperty("--dy",`${Math.sin(a*Math.PI/180)*dist}px`);d.textContent=["💩","✨","💫","🌟","⭐"][i%5];d.style.animationDuration=".85s";w.appendChild(d);setTimeout(()=>d.remove(),900);}}
+
+// ── RANKING ───────────────────────────────────────────────────────
+function rankMembers(){if(activeLeague){const l=S.leagues.find(x=>x.id===activeLeague);return l?l.members:[S.me];}return[S.me];}
+function rankData(from){return rankMembers().map(m=>({...m,score:score(m.id,from),streak:streak(m.id),today:cToday(m.id)})).sort((a,b)=>b.score-a.score);}
+function renderRankList(cid,data){
+  const me=S.me,el=document.getElementById(cid);el.innerHTML="";
+  if(!data.length){el.innerHTML='<div style="text-align:center;color:#5a3820;font-size:.75rem;padding:.4rem">—</div>';return;}
+  data.forEach((p,i)=>{const d=document.createElement("div");d.className="rank-item"+(p.id===me.id?" me":"");const mc=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"#6a5040",med=i<3?["🥇","🥈","🥉"][i]:i+1;d.innerHTML=`<span style="font-size:1rem;width:1.3rem;text-align:center;color:${mc}">${med}</span><span style="font-size:1.15rem">${p.emoji}</span><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.88rem;color:${p.id===me.id?"#FFD700":"#f0d8a0"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}${p.id===me.id?" ★":""}</div><div style="font-size:.65rem;color:#8a6840">🔥${p.streak} · ${p.today}💩</div></div><div style="font-weight:900;font-size:1.1rem;color:${i===0?"#FFD700":"#d8b870"};flex-shrink:0">${p.score}</div>`;el.appendChild(d);});
+}
+function renderRanking(){document.getElementById("private-notice").style.display=activeLeague?"none":"flex";renderRankList("rank-weekly",rankData(wkStart()));renderRankList("rank-monthly",rankData(moStart()));renderRankList("rank-historic",rankData(null));}
+
+// ── TROPHIES ──────────────────────────────────────────────────────
+function renderTrophies(){
+  const me=S.me,ts=score(me.id,null),td=cToday(me.id),str=streak(me.id),ws=score(me.id,wkStart()),lang=S.lang,labels=TL[lang]||TL.es,descs=TD[lang]||TD.es,grid=document.getElementById("trophy-grid");
+  grid.innerHTML="";
+  TROPHY_BASE.forEach((tr,i)=>{const earned=tr.cond(ts,td,str,ws);const d=document.createElement("div");d.className="trophy-card"+(earned?" earned":"");d.innerHTML=`<div style="font-size:1.5rem">${tr.icon}</div><div style="font-weight:700;font-size:.72rem;margin-top:.22rem;color:${earned?"#FFD700":"#6a3820"};line-height:1.2">${labels[i]||""}</div><div style="font-size:.6rem;color:${earned?"#b08050":"#3a1c00"};margin-top:.15rem;line-height:1.35">${descs[i]||""}</div>${earned?'<div style="font-size:.58rem;color:#a06030;margin-top:.2rem;font-weight:700">✓</div>':""}`;grid.appendChild(d);});
+}
+function renderTrophiesModal(){
+  const me=S.me,ts=score(me.id,null),td=cToday(me.id),str=streak(me.id),ws=score(me.id,wkStart()),lang=S.lang,tt=t(),labels=TL[lang]||TL.es,descs=TD[lang]||TD.es,ec=TROPHY_BASE.filter(tr=>tr.cond(ts,td,str,ws)).length;
+  document.getElementById("mt-title").textContent=tt.atit+" · "+ec+"/"+TROPHY_BASE.length;
+  const grid=document.getElementById("mt-grid");grid.innerHTML="";
+  TROPHY_BASE.forEach((tr,i)=>{const e=tr.cond(ts,td,str,ws);const d=document.createElement("div");d.style.cssText=`background:${e?"#2a1600":"#0e0800"};border:1.5px solid ${e?"#8B4513":"#1a1000"};border-radius:.7rem;padding:.55rem .4rem;text-align:center;filter:${e?"none":"grayscale(1) opacity(.25)"}`;d.innerHTML=`<div style="font-size:1.3rem">${tr.icon}</div><div style="font-weight:700;font-size:.58rem;margin-top:.15rem;color:${e?"#FFD700":"#2e1400"};line-height:1.2">${labels[i]||""}</div><div style="font-size:.5rem;color:${e?"#8a5030":"#1a0e00"};margin-top:.12rem;line-height:1.3">${descs[i]||""}</div>`;grid.appendChild(d);});
+}
+
+// ── STATS ─────────────────────────────────────────────────────────
+function renderStats(){
+  const me=S.me,tt=t();
+  const hm=document.getElementById("heatmap");hm.innerHTML="";
+  for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()-(13-i));const ds=d.toISOString().slice(0,10),cnt=S.logs.filter(l=>l.playerId===me.id&&l.date===ds).reduce((s,l)=>s+l.count,0),cell=document.createElement("div");cell.className="heat-cell";if(cnt===1)cell.style.background="#5a3300";else if(cnt===2)cell.style.background="#8B4513";else if(cnt>=3)cell.style.background="#FFD700";if(cnt>0){cell.textContent=cnt;cell.style.color=cnt>=3?"#1a0e00":"#f5e6d0";}hm.appendChild(cell);}
+  document.getElementById("sl-compare").textContent=tt.cmp+" · "+(activeLeague?S.leagues.find(l=>l.id===activeLeague)?.name:tt.solo);
+  document.getElementById("compare-hint").style.display=activeLeague?"none":"block";
+  const list=document.getElementById("compare-list");list.innerHTML="";
+  rankMembers().map(m=>({...m,score:score(m.id,null)})).sort((a,b)=>b.score-a.score).forEach(p=>{const maxS=Math.max(...rankMembers().map(m=>score(m.id,null)),1),row=document.createElement("div");row.style.cssText="flex-shrink:0";row.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:.18rem;font-size:.8rem"><span style="color:${p.id===me.id?"#FFD700":"#c8a870"}">${p.emoji} ${p.name}${p.id===me.id?" ★":""}</span><span style="color:#FFD700;font-weight:700">${p.score}</span></div><div class="compare-bar-bg"><div class="compare-bar-fill" style="width:${(p.score/maxS)*100}%;background:${p.id===me.id?"#FFD700":"#7B4020"}"></div></div>`;list.appendChild(row);});
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────
+function renderSettings(){
+  const tt=t();settingEmoji=S.me.emoji;settingLang=S.lang;
+  document.getElementById("ms-title").textContent=tt.stit;document.getElementById("ms-profile").textContent=tt.pr;document.getElementById("ms-lang-lbl").textContent=tt.lang;document.getElementById("ms-save").textContent=tt.sav;document.getElementById("ms-name").value=S.me.name;document.getElementById("ms-emoji-preview").textContent=settingEmoji;
+  const ew=document.getElementById("ms-emojis");ew.innerHTML="";EM.forEach(e=>{const b=document.createElement("button");b.type="button";b.textContent=e;b.style.cssText=`font-size:1.25rem;border-radius:.45rem;padding:.12rem .15rem;cursor:pointer;background:${settingEmoji===e?"#8B4513":"#1e1000"};border:${settingEmoji===e?"2px solid #FFD700":"2px solid transparent"}`;b.onclick=()=>{settingEmoji=e;document.getElementById("ms-emoji-preview").textContent=e;document.querySelectorAll("#ms-emojis button").forEach((x,i)=>{const ee=EM[i];x.style.background=settingEmoji===ee?"#8B4513":"#1e1000";x.style.border=settingEmoji===ee?"2px solid #FFD700":"2px solid transparent";});};ew.appendChild(b);});
+  const lw=document.getElementById("ms-langs");lw.innerHTML="";Object.entries(LN).forEach(([k,v])=>{const b=document.createElement("button");b.type="button";b.textContent=v+(settingLang===k?" ✓":"");b.style.cssText=`padding:.42rem .68rem;border-radius:.65rem;border:1px solid ${settingLang===k?"#8B4513":"#2a1600"};background:${settingLang===k?"#2a1600":"#0e0800"};color:${settingLang===k?"#FFD700":"#8a6040"};font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;text-align:left`;b.onclick=()=>{settingLang=k;document.querySelectorAll("#ms-langs button").forEach((x,i)=>{const kk=Object.keys(LN)[i];x.textContent=Object.values(LN)[i]+(settingLang===kk?" ✓":"");x.style.background=settingLang===kk?"#2a1600":"#0e0800";x.style.color=settingLang===kk?"#FFD700":"#8a6040";x.style.border=`1px solid ${settingLang===kk?"#8B4513":"#2a1600"}`;});};lw.appendChild(b);});
+}
+function saveSettings(){const name=document.getElementById("ms-name").value.trim()||S.me.name;S.me.name=name;S.me.emoji=settingEmoji;S.lang=settingLang;S.leagues=S.leagues.map(l=>({...l,members:l.members.map(m=>m.id===S.me.id?{...m,name,emoji:settingEmoji}:m)}));save();closeModal("settings");toast((T[settingLang]||T.es).saved);applyLang();renderAll();}
+
+// ── LEAGUES ───────────────────────────────────────────────────────
+function renderLeaguesList(){
+  const tt=t();document.getElementById("ml-title").textContent=tt.lt;document.getElementById("ml-create").textContent=tt.cr;document.getElementById("ml-join").textContent=tt.jc;
+  const list=document.getElementById("ml-list");list.innerHTML="";
+  if(!S.leagues.length){const p=document.createElement("p");p.textContent=tt.nl;p.style.cssText="color:#3a2000;font-size:.75rem;text-align:center;padding:.8rem 0";list.appendChild(p);return;}
+  S.leagues.forEach(l=>{const im=l.members.some(m=>m.id===S.me.id),d=document.createElement("div");d.style.cssText=`background:#0e0800;border-radius:.85rem;padding:.8rem;margin-bottom:.4rem;border:1px solid ${im?"#5a2e00":"#1a1000"}`;const ab=im?`<button onclick="openLeagueDetail('${l.id}')" style="background:#1a1000;border:1px solid #2e1800;color:#8a6040;border-radius:.45rem;padding:.2rem .5rem;cursor:pointer;font-size:.68rem;font-family:'Nunito',sans-serif;font-weight:700">${tt.vb}</button>`:`<button onclick="joinDirect('${l.id}')" style="background:#0e1e10;border:1px solid #3a6040;color:#7ab090;border-radius:.45rem;padding:.2rem .5rem;cursor:pointer;font-size:.68rem;font-family:'Nunito',sans-serif;font-weight:700">${tt.jd}</button>`;d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:700;font-size:.85rem;color:${im?"#FFD700":"#b09050"}">${l.name}</div><div style="font-size:.65rem;color:#4a3020;margin-top:.1rem">${l.members.length} ${tt.lm}</div><div style="display:flex;align-items:center;gap:.28rem;margin-top:.22rem"><span style="font-size:.62rem;color:#6a4020">${tt.cl}</span><span style="font-size:.7rem;color:#FFD700;font-family:monospace;font-weight:700;letter-spacing:.08em;background:#1a0e00;padding:.06rem .3rem;border-radius:.3rem">${l.code}</span></div></div>${ab}</div>`;list.appendChild(d);});
+}
+function openLeagueDetail(lid){
+  focusLid=lid;const l=S.leagues.find(x=>x.id===lid);if(!l)return;const tt=t();
+  document.getElementById("mld-name").textContent=l.name;document.getElementById("mld-code").textContent=l.code;document.getElementById("mld-code-lbl").textContent=tt.cl;document.getElementById("mld-share").textContent=tt.sc;document.getElementById("mld-leave").textContent=tt.ll;
+  const mm=document.getElementById("mld-members");mm.innerHTML="";l.members.forEach(m=>{const d=document.createElement("div");d.style.cssText="display:flex;align-items:center;gap:.4rem;padding:.4rem 0;border-bottom:1px solid #1a1000";d.innerHTML=`<span>${m.emoji}</span><span style="font-weight:700;font-size:.78rem;color:${m.id===S.me.id?"#FFD700":"#b09050"}">${m.name}${m.id===S.me.id?" ★":""}</span><span style="margin-left:auto;font-size:.72rem;color:#8B4513;font-weight:700">${score(m.id,null)}💩</span>`;mm.appendChild(d);});
+  openModal("league-detail");
+}
+function leaveCurrentLeague(){if(!focusLid)return;const tt=t();S.leagues=S.leagues.map(l=>l.id===focusLid?{...l,members:l.members.filter(m=>m.id!==S.me.id)}:l).filter(l=>l.members.length>0);if(activeLeague===focusLid)setLeague(null);save();closeModal("league-detail");toast(tt.ll);renderLeagueBar();renderAll();}
+function joinDirect(lid){const l=S.leagues.find(x=>x.id===lid);if(!l)return;l.members.push({id:S.me.id,name:S.me.name,emoji:S.me.emoji});save();renderLeaguesList();renderLeagueBar();toast(l.name+" 💩");}
+function createLeague(){const name=document.getElementById("mcl-name").value.trim();if(!name)return;const id="l_"+Date.now(),code=mkCode();S.leagues.push({id,name,code,members:[{id:S.me.id,name:S.me.name,emoji:S.me.emoji}]});save();document.getElementById("mcl-name").value="";openModal("leagues");renderLeagueBar();toast(name+" · "+code+" 🏆");}
+function joinLeague(){const code=document.getElementById("mjl-code").value.trim().toUpperCase();const l=S.leagues.find(x=>x.code===code);if(!l){toast("❌ "+code);return;}if(l.members.some(m=>m.id===S.me.id)){document.getElementById("mjl-code").value="";toast("😄");return;}l.members.push({id:S.me.id,name:S.me.name,emoji:S.me.emoji});save();document.getElementById("mjl-code").value="";openModal("leagues");renderLeagueBar();toast(l.name+" 💩");}
+
+// ── BOOT ──────────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded",()=>{
+  initParticles();load();
+  if(S.me){
+    document.getElementById("onboarding").classList.add("hidden");
+    const ma=document.getElementById("main-app");ma.classList.remove("hidden");ma.style.display="flex";
+    initApp();
+  } else {
+    initOnboarding();
+  }
+});
+</script>
+</body>
+</html>
