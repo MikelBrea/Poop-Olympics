@@ -298,12 +298,12 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, q
 // 🔥 PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
 // ════════════════════════════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: "AIzaSyB8-6irmAg9Ufi53-Ehrqayr4vWEadpkZM",
-  authDomain: "caca-olympics.firebaseapp.com",
-  projectId: "caca-olympics",
-  storageBucket: "caca-olympics.firebasestorage.app",
-  messagingSenderId: "519657166078",
-  appId: "1:519657166078:web:4fdc7ae5d55277749841af"
+  apiKey: "PEGA_AQUI_TU_API_KEY",
+  authDomain: "PEGA_AQUI_TU_AUTH_DOMAIN",
+  projectId: "PEGA_AQUI_TU_PROJECT_ID",
+  storageBucket: "PEGA_AQUI_TU_STORAGE_BUCKET",
+  messagingSenderId: "PEGA_AQUI_TU_MESSAGING_SENDER_ID",
+  appId: "PEGA_AQUI_TU_APP_ID"
 };
 // ════════════════════════════════════════════════════════════════
 
@@ -446,12 +446,15 @@ function subscribeLeague(lid){
 
 // ── APP INIT ─────────────────────────────────────────────────────
 async function initApp(){
-  initParticles();
   applyLang();
-  await loadMyLeagues();
-  renderLeagueBar();
   renderAll();
+  renderLeagueBar();
   document.getElementById("loading-screen").classList.add("hidden");
+  // Cargar ligas en background sin bloquear la UI
+  loadMyLeagues().then(()=>{
+    renderLeagueBar();
+    renderAll();
+  }).catch(e=>console.warn("Leagues load error:",e));
 }
 
 function applyLang(){
@@ -612,20 +615,62 @@ window.joinLeague=async function(){
 };
 
 // ── BOOT ──────────────────────────────────────────────────────────
+function showLoadingError(msg){
+  const ls=document.getElementById("loading-screen");
+  ls.innerHTML=`
+    <div style="font-family:'Press Start 2P',monospace;font-size:clamp(.55rem,2.5vw,.85rem);color:#FFD700;text-align:center;padding:0 1.5rem;line-height:2">💩 CACA OLYMPICS 💩</div>
+    <div style="background:#1e0800;border:1px solid #8B2000;border-radius:1rem;padding:1rem 1.2rem;max-width:300px;width:90%;margin-top:.5rem">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:#ff6060;margin-bottom:.7rem;text-align:center">ERROR DE CONEXIÓN</div>
+      <div style="font-size:.75rem;color:#c08060;line-height:1.6;margin-bottom:.9rem">${msg}</div>
+      <div style="font-size:.65rem;color:#7a5030;line-height:1.7;margin-bottom:.9rem">
+        Comprueba:<br>
+        1. Firestore está en <b style="color:#FFD700">modo de prueba</b><br>
+        2. El projectId es correcto<br>
+        3. Firestore Database está <b style="color:#FFD700">activado</b>
+      </div>
+      <button onclick="window.location.reload()" style="width:100%;padding:.55rem;border-radius:.8rem;border:none;background:#8B4513;color:#FFD700;font-family:'Nunito',sans-serif;font-weight:900;font-size:.85rem;cursor:pointer">Reintentar 🔄</button>
+    </div>`;
+}
+
+async function withTimeout(promise, ms, label){
+  let timer;
+  const timeout=new Promise((_,rej)=>timer=setTimeout(()=>rej(new Error(`Timeout (${label})`)),ms));
+  try{const r=await Promise.race([promise,timeout]);clearTimeout(timer);return r;}
+  catch(e){clearTimeout(timer);throw e;}
+}
+
 async function boot(){
   initParticles();
-  // Comprobar si ya tenemos perfil guardado localmente
+
+  const cfg=firebaseConfig;
+  if(!cfg.projectId||cfg.projectId.includes("PEGA_AQUI")){
+    showLoadingError("La configuración de Firebase no está rellenada.");
+    return;
+  }
+
   const local=loadLocal();
   if(local?.id){
-    const ok=await loadPlayer(local.id);
-    if(ok){
-      document.getElementById("loading-screen").classList.add("hidden");
-      document.getElementById("onboarding").classList.add("hidden");
-      const ma=document.getElementById("main-app");ma.classList.remove("hidden");ma.style.display="flex";
-      await initApp();
+    try{
+      const ok=await withTimeout(loadPlayer(local.id),8000,"loadPlayer");
+      if(ok){
+        // Ocultar loading INMEDIATAMENTE al conectar
+        document.getElementById("loading-screen").classList.add("hidden");
+        document.getElementById("onboarding").classList.add("hidden");
+        const ma=document.getElementById("main-app");
+        ma.classList.remove("hidden");
+        ma.style.display="flex";
+        // initApp en background — la UI ya es visible
+        initApp();
+        return;
+      }
+    }catch(e){
+      console.error("Boot error:",e);
+      showLoadingError(`No se pudo conectar con Firestore.<br><br><small style="color:#6a4020">${e.message}</small>`);
       return;
     }
   }
+  // Sin perfil local → onboarding
+  document.getElementById("loading-screen").classList.add("hidden");
   initOnboarding();
 }
 boot();
