@@ -318,22 +318,21 @@ const saveLeaguesLocal=()=>{ try{ localStorage.setItem(LK+"-leagues",JSON.string
 const loadLeaguesLocal=()=>{ try{ const r=localStorage.getItem(LK+"-leagues"); return r?JSON.parse(r):{}; }catch{ return {}; } };
 
 // ── API ───────────────────────────────────────────────────────────
+// Todo va por GET — Apps Script bloquea POST desde dominios externos
 async function api(params){
-  if(API.includes("PEGA_AQUI")) return null; // sin configurar aún
   const url=API+"?"+new URLSearchParams(params);
   try{
-    const r=await fetch(url,{method:"GET",redirect:"follow"});
-    const txt=await r.text();
-    return JSON.parse(txt);
-  }catch(e){ console.warn("API error:",e.message); return null; }
+    const r=await fetch(url,{redirect:"follow"});
+    return JSON.parse(await r.text());
+  }catch(e){ console.warn("API GET:",e.message); return null; }
 }
 async function apiPost(body){
-  if(API.includes("PEGA_AQUI")) return null;
   try{
-    const r=await fetch(API,{method:"POST",body:JSON.stringify(body),headers:{"Content-Type":"text/plain"},redirect:"follow"});
-    const txt=await r.text();
-    return JSON.parse(txt);
-  }catch(e){ console.warn("API error:",e.message); return null; }
+    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(body))));
+    const url=API+"?action="+body.action+"&data="+encodeURIComponent(encoded);
+    const r=await fetch(url,{redirect:"follow"});
+    return JSON.parse(await r.text());
+  }catch(e){ console.warn("API POST>GET:",e.message); return null; }
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────
