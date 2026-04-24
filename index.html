@@ -378,11 +378,14 @@ function updEnter(){const n=document.getElementById("ob-name").value.trim();cons
 
 async function doEnter(){
   const name=document.getElementById("ob-name").value.trim();if(!name)return;
+  const btn=document.getElementById("ob-enter");
+  btn.textContent="...";btn.disabled=true;
   const id="p_"+Date.now()+"_"+Math.random().toString(36).slice(2,5);
   me={id,name,emoji:obEmoji,lang:obLang};myLogs=[];
   saveLocal();
-  // Guardar en servidor en background
-  apiPost({action:"savePlayer",id,name,emoji:obEmoji,lang:obLang,logs:[]});
+  // Guardar en servidor (esperar para que el perfil exista antes de unirse a ligas)
+  await apiPost({action:"savePlayer",id:id,name:name,emoji:obEmoji,lang:obLang,logs:[]});
+  btn.textContent=(T[obLang]||T.es).eb;btn.disabled=false;
   document.getElementById("onboarding").classList.add("hidden");
   showMainApp();
   initApp();
@@ -555,18 +558,41 @@ async function createLeague(){
 }
 
 async function joinLeague(){
-  const code=document.getElementById("mjl-code").value.trim().toUpperCase();if(!code)return;
-  const btn=document.getElementById("mjl-join");btn.textContent="...";btn.disabled=true;
-  const res=await apiPost({action:"joinLeague",code,playerId:me.id});
+  const code=document.getElementById("mjl-code").value.trim().toUpperCase();
+  if(!code)return;
+  const btn=document.getElementById("mjl-join");
+  btn.textContent="...";btn.disabled=true;
+
+  // Primero guardar mi perfil en el servidor por si no existe aun
+  await apiPost({action:"savePlayer",id:me.id,name:me.name,emoji:me.emoji,lang:me.lang,logs:myLogs});
+
+  const res=await apiPost({action:"joinLeague",code:code,playerId:me.id});
   btn.textContent=t().jb;btn.disabled=false;
-  if(!res||res.error){showToast("❌ "+res?.error||"Código no encontrado");return;}
-  if(res.alreadyMember){showToast("😄 Ya estás en esta liga");document.getElementById("mjl-code").value="";return;}
+
+  if(!res){showToast("❌ Sin respuesta del servidor");return;}
+  if(res.error){showToast("❌ "+res.error);return;}
+  if(res.alreadyMember){
+    // Ya soy miembro pero quizas no lo tenia guardado localmente
+    const detail=await api({action:"getLeagueMembers",leagueId:res.league.id});
+    if(detail&&detail.ok){
+      leagues[res.league.id]={...res.league,members:detail.league.members||[]};
+      saveLeaguesLocal();renderLeagueBar();
+    }
+    showToast("Ya eras miembro, liga cargada 👍");
+    document.getElementById("mjl-code").value="";
+    closeModal("join-league");
+    return;
+  }
+
   const l=res.league;
-  // Cargar miembros con logs
+  // Cargar miembros completos con sus logs
   const detail=await api({action:"getLeagueMembers",leagueId:l.id});
-  leagues[l.id]={...l,members:detail?.league?.members||[{id:me.id,name:me.name,emoji:me.emoji,logs:myLogs}]};
-  saveLeaguesLocal();document.getElementById("mjl-code").value="";
-  openModal("leagues");renderLeagueBar();showToast(l.name+" 💩");
+  const members=detail&&detail.ok?detail.league.members||[]:[{id:me.id,name:me.name,emoji:me.emoji,logs:myLogs}];
+  leagues[l.id]={id:l.id,name:l.name,code:l.code,memberIds:l.memberIds,members:members};
+  saveLeaguesLocal();
+  document.getElementById("mjl-code").value="";
+  openModal("leagues");renderLeagueBar();renderAll();
+  showToast(l.name+" 💩");
 }
 
 // ── BOOT ─────────────────────────────────────────────────────────
