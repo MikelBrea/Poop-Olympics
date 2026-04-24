@@ -318,7 +318,8 @@ const saveLeaguesLocal=()=>{ try{ localStorage.setItem(LK+"-leagues",JSON.string
 const loadLeaguesLocal=()=>{ try{ const r=localStorage.getItem(LK+"-leagues"); return r?JSON.parse(r):{}; }catch{ return {}; } };
 
 // ── API ───────────────────────────────────────────────────────────
-// Todo va por GET — Apps Script bloquea POST desde dominios externos
+// Todas las llamadas van por GET con los datos en ?data=JSON
+// Esto evita problemas de CORS con Apps Script
 async function api(params){
   const url=API+"?"+new URLSearchParams(params);
   try{
@@ -327,9 +328,12 @@ async function api(params){
   }catch(e){ console.warn("API GET:",e.message); return null; }
 }
 async function apiPost(body){
+  // Enviamos action + data como JSON en la URL (GET)
+  // encodeURIComponent maneja emojis correctamente, a diferencia de btoa
   try{
-    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(body))));
-    const url=API+"?action="+body.action+"&data="+encodeURIComponent(encoded);
+    const action=body.action;
+    const data=encodeURIComponent(JSON.stringify(body));
+    const url=API+"?action="+action+"&data="+data;
     const r=await fetch(url,{redirect:"follow"});
     return JSON.parse(await r.text());
   }catch(e){ console.warn("API POST>GET:",e.message); return null; }
